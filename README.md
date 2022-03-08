@@ -3,14 +3,16 @@ High performance C++ HTTP/HTTPS web server based on [LightningHTTP](https://gith
 
 ## Usage Instructions
 
-Run with `./LightningSrv`\
+Run with `sudo ./LightningSrv`\
 Your HTTPS certs should be located at `web.crt` and `web.key`, and site files go in `./web`. However, all of this is customizable! Have a look at the code, there's lots of comments.
+
+To make it start on boot, you'll need to make use of whatever init system your distro uses. For use with the fairly common systemd, an example config `lightning.service` is provided. Make sure to change *WorkingDirectory* and *ExecStart* to wherever the server is located (or a custom start script if desired), the path must be absolute. Then, install with `sudo cp lightning.service /etc/systemd/system && sudo systemctl daemon-reload && sudo systemctl enable lightning`
 
 ## Build Instructions for Noobs
 
-Step 1: Be on Linux. If you're using an uncommon distro or a non-Linux OS and it won't compile, just submit and issue and I'll have a look. Alternatively, if you **aren't** using a Unix-based OS to host your server, I can suggest several local asylums.
+Step 1: Be on Linux. If you're using an uncommon distro or a non-Linux OS (eg. MacOS) and it won't compile, just submit and issue and I'll have a look. Alternatively, if you **aren't** using a Unix-based OS to host your server, I can suggest several local asylums.
 
-You'll need to install a few tools to get going. On most Debian-based distros you do this using **apt**, which is *totally* a great package manager and has *no flaws whatsoever.* If you are using apt, all you need to do is run `sudo apt install gcc g++ libssl-dev zlib1g-dev`
+You'll need to install a few tools to get going. On most Debian-based distros you do this using **apt**, which is *totally* a great package manager and has *no flaws whatsoever.* If you're using apt, all you need to do is run `sudo apt install gcc g++ libssl-dev zlib1g-dev`
 
 Finally, compile the server with `bash compile.sh`\
 There are several *optional arguments,* too. `bash compile.sh http` compiles only the http library and not utils. `bash compile.sh server` compiles only the server and not any of the libraries. Adding the `debug` option to the end of any of these compiles with debug mode on, allowing you to test with a debugger like `gdb`.

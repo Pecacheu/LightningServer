@@ -1,0 +1,11 @@
+[Unit]
+Description=LightningHTTP
+After=network.target
+
+[Service]
+Type=forking
+WorkingDirectory=/root/LightningServer
+ExecStart=/root/LightningServer/LightningSrv
+
+[Install]
+WantedBy=multi-user.target
