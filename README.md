@@ -3,9 +3,8 @@ High performance C++ HTTP/HTTPS web server based on [LightningHTTP](https://gith
 
 ## Usage Instructions
 
-Run with `./LightningSrv`
-Your HTTPS certs should be located at `web.crt` and `web.key`, files go in `./web`
-However, all of this is customizable! Have a look at the code, there's lots of comments.
+Run with `./LightningSrv`\
+Your HTTPS certs should be located at `web.crt` and `web.key`, and site files go in `./web`. However, all of this is customizable! Have a look at the code, there's lots of comments.
 
 ## Build Instructions for Noobs
 
@@ -13,7 +12,7 @@ Step 1: Be on Linux. If you're using an uncommon distro or a non-Linux OS and it
 
 You'll need to install a few tools to get going. On most Debian-based distros you do this using **apt**, which is *totally* a great package manager and has *no flaws whatsoever.* If you are using apt, all you need to do is run `sudo apt install gcc g++ libssl-dev zlib1g-dev`
 
-Finally, compile the server with `bash compile.sh`
+Finally, compile the server with `bash compile.sh`\
 There are several *optional arguments,* too. `bash compile.sh http` compiles only the http library and not utils. `bash compile.sh server` compiles only the server and not any of the libraries. Adding the `debug` option to the end of any of these compiles with debug mode on, allowing you to test with a debugger like `gdb`.
 
 Now the astute among you may ask, why not just use *make* for this instead of an overkill bash script with argument parsing? **Good question!**

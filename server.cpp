@@ -25,8 +25,6 @@ struct ReqData {
 ReqData httpReq(NetAddr& a, const char *path, bool https=0) {
 	volatile bool s=1; ReqData r;
 	HttpResponse *rw=httpOpenRequest(a, [&s,&r](int err, HttpRequest *res, string *eMsg) {
-		cout << " Stat: " << (res?res->code:0) << " Cont: " <<
-			(res?res->content.len:-1) << " Err: " << err << " " << (eMsg?"true":"false") << '\n';
 		if(err || res->code != 200) {
 			r.err=err?err:res->code;
 			r.msg="Proxy Error: "+(eMsg?*eMsg:res?to_string(res->code)+" "+res->type:to_string(err));
@@ -42,6 +40,19 @@ ReqData httpReq(NetAddr& a, const char *path, bool https=0) {
 //------------------------------------- Request Handlers -------------------------------------------
 //--------------------------------------------------------------------------------------------------
 
+/*The full request handler order is as follows:
+ServerOpt.preReq - Called before request parsing begins, generally for advanced use, ex. IP bans.
+ServerOpt.onReq - Custom request handler. If you ignore a request, the server will handle it.
+ServerOpt.setHdr - Called before the server sends a response, allowing custom headers to be set.
+ServerOpt.readCustom - Custom file reader, ex. can be used for JS minification or PHP parsing.
+ServerOpt.postReq - Called after a request is completed, useful for logging purposes.*/
+
+/*As an example, let's say we have some files under /web/logs that we don't want cached,
+	but we want to set the cache policy for everything else to 1 hour.*/
+void setHdr(HttpRequest& req, HttpResponse& res, stringmap& hd) {
+	if(!startsWith(req.path, "/logs")) hd["Cache-Control"] = "private, max-age=3600";
+}
+
 /*The request handler is called whenever a client makes a request to the server!
 	req is your HttpRequest, containing info about the client and the request data.
 	res is your HttpResponse, which allows you to reply to the client with a custom resource.
@@ -51,16 +62,17 @@ ReqData httpReq(NetAddr& a, const char *path, bool https=0) {
 void onReq(HttpRequest& req, HttpResponse& res) {
 	string& path=req.path, host=req.header["Host"]; //Example of how to read a request header
 
-	//HTTPS Redirect:
-	if(!req.cli.srv->sl) {
-		cout << "https://"+host+req.path << '\n';
+	//HTTPS Auto-Redirect:
+	if(SPORT && !req.cli.srv->sl) {
+		res.setUseChunked(0); res.setKeepAlive(0);
 		stringmap hd; hd["Location"] = "https://"+host+req.path;
 		res.writeHead(308,&hd); res.end(); ((int&)req.u)=2; return;
 	}
 
 	//Custom Requests:
 	if(path == "/ping") {
-		res.setUseChunked(0); //Disable chunked transfer (This means calling res.writeHead() is optional)
+		res.setUseChunked(0);
+		//Disable chunked transfer (This also means calling res.writeHead() is optional)
 		res.setKeepAlive(0); //Drop the connection immediately
 		res.write(httpGetVersion()+"\nPing OK"); //Write response
 		//(Note: The string will be auto-converted to a Buffer object)
@@ -111,7 +123,7 @@ void logReq(HttpRequest& req, HttpResponse& res) {
 	string& m=res.getStatMsg(); uint16_t s=res.getStat(); //Get response message and code
 	string msg, ip=req.cli.cli.addr.host; //This could be easier to obtain, but hey
 	if(s==308) msg = "\e[33mHTTPS Redirect"; //308 = Permanent Redirect
-	else msg = (s>=400&&s<500?"\e[31m":"")+to_string(s)+(m.size()?' '+m:"");
+	else msg = (s>=400&&s<500?"\e[31m":"")+to_string(s)+(m.size()?' '+m:""); //Log status code
 	cout << "\e[36m"+getDate(0,1)+" @ "+ip+" \e[0m"+req.uri+" -> "+msg+"\e[0m\n";
 }
 
@@ -138,7 +150,7 @@ int main(int argc, char *argv[]) { //Main program
 
 	ServerOpt o; //Create server options list.
 	//o.chkMode=0; //Example config option. This would disable Chunked Transfer Encoding
-	o.onReq=onReq; o.postReq=postReq; //Set callbacks
+	o.setHdr=setHdr; o.onReq=onReq; o.postReq=postReq; //Set callbacks
 	srv = new WebServer(ROOT,CacheMax,o); //Create WebServer
 
 	SSLList sl(1); //Create an SSLList with size 1. Note: SSLList is only used if SPORT != 0
