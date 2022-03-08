@@ -1,6 +1,6 @@
 [submodule "LightningHTTP"]
 	path = LightningHTTP
-	url = ../LightningHTTP
+	url = https://github.com/pecacheu/LightningHTTP
 [submodule "C-Utils"]
 	path = C-Utils
-	url = ../C-Utils
+	url = https://github.com/pecacheu/C-Utils
